@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JARVIS 15.1 — Segundo Cérebro</title>
+<style>
+body{margin:0;background:#0b1220;color:#eef2ff;font-family:system-ui,sans-serif}main{max-width:720px;margin:auto;padding:18px}.card{background:#121c2e;border:1px solid #26344d;border-radius:18px;padding:18px;margin:16px 0}.eyebrow{color:#93c5fd;font-weight:700;letter-spacing:.15em}h1{font-size:1.8rem}input,textarea,select{width:100%;padding:13px;margin:6px 0;border-radius:12px;border:1px solid #34445f;background:#0c1525;color:#eef2ff;font:inherit;box-sizing:border-box}button{border:0;border-radius:12px;padding:13px 16px;background:#2563eb;color:white;font-weight:700;font-size:1rem;margin-top:8px}button.secondary{background:#22314a}.status{min-height:1.2em;color:#93c5fd}.ok{color:#86efac}.error{color:#fca5a5}.memory{border:1px solid #2a3a54;border-radius:14px;padding:14px;margin:10px 0;background:#0d1728}.type{font-size:.75rem;text-transform:uppercase;color:#93c5fd;font-weight:700}.memory h3{margin:5px 0}.memory p{white-space:pre-wrap;color:#c8d2e3}
+</style></head><body><main>
+<p class="eyebrow">JARVIS 15.1</p><h1>Segundo Cérebro 🧠</h1><p>Versão web com autenticação Supabase.</p>
+
+<section class="card"><h2>1. Conectar ao Supabase</h2>
+<p>Use a URL e somente a chave pública <b>sb_publishable_...</b>.</p>
+<input id="url" placeholder="https://seu-projeto.supabase.co"><input id="key" placeholder="sb_publishable_...">
+<button onclick="conectar()">Conectar</button><p id="status" class="status"></p></section>
+
+<section class="card"><h2>2. Login do JARVIS</h2>
+<input id="email" type="email" placeholder="E-mail do usuário"><input id="password" type="password" placeholder="Senha">
+<button onclick="login()">Entrar</button><button class="secondary" onclick="logout()">Sair</button>
+<p id="authStatus" class="status"></p></section>
+
+<section class="card"><h2>3. Segundo Cérebro</h2><button class="secondary" onclick="consultar()">Atualizar memórias</button><div id="lista"><p>Faça login para consultar suas memórias.</p></div></section>
+
+<section class="card"><h2>4. Nova memória</h2>
+<select id="tipo"><option>anotacao</option><option>tarefa</option><option>ideia</option><option>projeto</option></select>
+<input id="titulo" placeholder="Título"><textarea id="conteudo" rows="5" placeholder="Conteúdo"></textarea>
+<button onclick="salvar()">Salvar memória</button><p id="saveStatus" class="status"></p></section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
+let sb=null;const $=id=>document.getElementById(id);
+function conectar(){const url=$("url").value.trim(),key=$("key").value.trim();if(!url||!key){$("status").textContent="Preencha os dois campos.";return}try{sb=supabase.createClient(url,key);localStorage.setItem("jarvis_url",url);localStorage.setItem("jarvis_key",key);$("status").textContent="Supabase conectado.";verificarSessao()}catch(e){$("status").textContent=e.message}}
+async function verificarSessao(){if(!sb)return;const {data}=await sb.auth.getSession();if(data.session){$("authStatus").textContent="Usuário conectado.";$("authStatus").className="status ok";consultar()}else $("authStatus").textContent="Faça login para acessar suas memórias."}
+async function login(){if(!sb){$("authStatus").textContent="Conecte o Supabase primeiro.";return}const email=$("email").value.trim(),password=$("password").value;if(!email||!password){$("authStatus").textContent="Informe e-mail e senha.";return}const {error}=await sb.auth.signInWithPassword({email,password});if(error){$("authStatus").textContent=error.message;$("authStatus").className="status error";return}$("authStatus").textContent="Login realizado com sucesso.";$("authStatus").className="status ok";consultar()}
+async function logout(){if(!sb)return;await sb.auth.signOut();$("authStatus").textContent="Sessão encerrada.";$("lista").innerHTML="<p>Faça login para consultar suas memórias.</p>"}
+async function consultar(){if(!sb){$("status").textContent="Conecte o Supabase primeiro.";return}const {data:s}=await sb.auth.getSession();if(!s.session){$("lista").innerHTML="<p>Faça login para consultar suas memórias.</p>";return}const {data,error}=await sb.from("memories").select("id,user_id,tipo,titulo,conteudo,created_at,updated_at").order("created_at",{ascending:false});if(error){$("status").textContent=error.message;return}$("lista").innerHTML=data?.length?data.map(m=>'<article class="memory"><div class="type">'+esc(m.tipo)+'</div><h3>'+esc(m.titulo)+'</h3><p>'+esc(m.conteudo)+'</p></article>').join(""):"<p>Nenhuma memória encontrada.</p>"}
+async function salvar(){if(!sb){$("saveStatus").textContent="Conecte o Supabase primeiro.";return}const {data:s}=await sb.auth.getSession(),u=s.session?.user;if(!u){$("saveStatus").textContent="Faça login antes de salvar.";return}const tipo=$("tipo").value,titulo=$("titulo").value.trim(),conteudo=$("conteudo").value.trim();if(!titulo||!conteudo){$("saveStatus").textContent="Preencha título e conteúdo.";return}const {error}=await sb.from("memories").insert({user_id:u.id,tipo,titulo,conteudo});if(error){$("saveStatus").textContent=error.message;return}$("saveStatus").textContent="Memória salva com sucesso.";$("titulo").value="";$("conteudo").value="";consultar()}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+const u=localStorage.getItem("jarvis_url"),k=localStorage.getItem("jarvis_key");if(u)$("url").value=u;if(k)$("key").value=k;if(u&&k)conectar();
+</script></body></html>
