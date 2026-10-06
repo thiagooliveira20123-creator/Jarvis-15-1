@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1220">
+<title>JARVIS 15.1 — Segundo Cérebro</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b1220;color:#eef2ff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:720px;margin:auto;padding:18px}.card{background:#121c2e;border:1px solid #26344d;border-radius:18px;padding:18px;margin:16px 0}
+h1{margin:0;font-size:1.8rem}h2{font-size:1.1rem}.eyebrow{color:#93c5fd;font-weight:700;letter-spacing:.15em}.muted{color:#aab5c8}
+input,textarea,select{width:100%;padding:13px;margin:6px 0;border-radius:12px;border:1px solid #34445f;background:#0c1525;color:#eef2ff;font:inherit}
+button{border:0;border-radius:12px;padding:13px 16px;background:#2563eb;color:white;font-weight:700;font-size:1rem;margin-top:8px}
+button.secondary{background:#22314a}.status{min-height:1.2em;color:#93c5fd}.memory{border:1px solid #2a3a54;border-radius:14px;padding:14px;margin:10px 0;background:#0d1728}.type{font-size:.75rem;text-transform:uppercase;color:#93c5fd;font-weight:700}.memory h3{margin:5px 0}.memory p{white-space:pre-wrap;color:#c8d2e3}.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+</style>
+</head>
+<body>
+<main>
+<header><p class="eyebrow">JARVIS 15.1</p><h1>Segundo Cérebro 🧠</h1><p class="muted">Primeira versão web para usar pelo celular.</p></header>
+
+<section class="card">
+<h2>1. Conectar ao Supabase</h2>
+<p class="muted">Use somente a URL do projeto e a chave pública <b>sb_publishable_...</b>. Nunca coloque a service_role.</p>
+<input id="url" placeholder="https://seu-projeto.supabase.co">
+<input id="key" placeholder="sb_publishable_...">
+<button onclick="conectar()">Conectar</button>
+<p id="status" class="status"></p>
+</section>
+
+<section class="card">
+<h2>2. Consultar memórias</h2>
+<button class="secondary" onclick="consultar()">Atualizar memórias</button>
+<div id="lista"><p class="muted">Conecte o Supabase primeiro.</p></div>
+</section>
+
+<section class="card">
+<h2>3. Nova memória</h2>
+<select id="tipo"><option>anotacao</option><option>tarefa</option><option>ideia</option><option>projeto</option></select>
+<input id="titulo" placeholder="Título">
+<textarea id="conteudo" rows="5" placeholder="Conteúdo"></textarea>
+<button onclick="salvar()">Salvar memória</button>
+<p id="saveStatus" class="status"></p>
+</section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+let sb=null;
+const $=id=>document.getElementById(id);
+function conectar(){
+ const url=$("url").value.trim(),key=$("key").value.trim();
+ if(!url||!key){$("status").textContent="Preencha os dois campos.";return}
+ try{sb=supabase.createClient(url,key);localStorage.setItem("jarvis_url",url);localStorage.setItem("jarvis_key",key);$("status").textContent="Supabase conectado.";consultar()}
+ catch(e){$("status").textContent=e.message}
+}
+async function consultar(){
+ if(!sb){$("status").textContent="Conecte o Supabase primeiro.";return}
+ const {data,error}=await sb.from("memories").select("id,user_id,tipo,titulo,conteudo,created_at,updated_at").order("created_at",{ascending:false});
+ if(error){$("status").textContent=error.message;return}
+ $("lista").innerHTML=data?.length?data.map(m=>`<article class="memory"><div class="type">${esc(m.tipo)}</div><h3>${esc(m.titulo)}</h3><p>${esc(m.conteudo)}</p></article>`).join(""):'<p class="muted">Nenhuma memória disponível para a sessão atual.</p>';
+}
+async function salvar(){
+ $("saveStatus").textContent="O login será conectado na próxima etapa. Por segurança, o salvamento está bloqueado nesta primeira versão.";
+}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+const u=localStorage.getItem("jarvis_url"),k=localStorage.getItem("jarvis_key");
+if(u)$("url").value=u;if(k)$("key").value=k;if(u&&k)conectar();
+</script>
+</body>
+</html>
