@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <title>JARVIS 15.1 — Segundo Cérebro</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <p class="eyebrow">JARVIS 15.1</p>
+        <h1>Segundo Cérebro</h1>
+        <p class="muted">Memórias, ideias, tarefas e projetos.</p>
+      </div>
+      <button id="installBtn" class="secondary hidden">Instalar</button>
+    </header>
+
+    <section class="card">
+      <h2>Configuração</h2>
+      <p class="muted small">Cole aqui apenas a URL e a chave pública (publishable) do Supabase.</p>
+      <input id="supabaseUrl" placeholder="https://seu-projeto.supabase.co" autocomplete="off">
+      <input id="supabaseKey" placeholder="sb_publishable_..." autocomplete="off">
+      <button id="saveConfig">Salvar configuração</button>
+      <p id="configStatus" class="status"></p>
+    </section>
+
+    <section class="card">
+      <h2>Nova memória</h2>
+      <select id="tipo">
+        <option value="anotacao">Anotação</option>
+        <option value="tarefa">Tarefa</option>
+        <option value="ideia">Ideia</option>
+        <option value="projeto">Projeto</option>
+      </select>
+      <input id="titulo" placeholder="Título">
+      <textarea id="conteudo" rows="5" placeholder="Escreva a memória..."></textarea>
+      <button id="saveMemory">Salvar memória</button>
+      <p id="memoryStatus" class="status"></p>
+    </section>
+
+    <section class="card">
+      <div class="row">
+        <h2>Memórias</h2>
+        <button id="loadMemories" class="secondary">Atualizar</button>
+      </div>
+      <div id="memories" class="memories">
+        <p class="muted">Configure o Supabase e faça login para consultar.</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Próxima etapa</h2>
+      <p class="muted">Esta primeira versão testa a interface e a conexão. O login do Supabase será conectado na próxima versão para que cada usuário veja somente suas próprias memórias.</p>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
